@@ -18,7 +18,7 @@ libraryDependencies ++= Seq(
   "com.softwaremill.sttp.client" %% "async-http-client-backend-monix" % "2.2.0",
   "com.softwaremill.sttp.client" %% "circe" % "2.2.0",
   "io.circe" %% "circe-generic" % "0.12.1",
-  "com.amazonaws" % "aws-java-sdk-s3" % "1.11.787"
-
+  "com.amazonaws" % "aws-java-sdk-s3" % "1.11.787",
+  "com.typesafe" % "config" % "1.3.4",
 )
 

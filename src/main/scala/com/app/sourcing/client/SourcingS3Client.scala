@@ -54,7 +54,7 @@ class SourcingS3Client(s3Client: AmazonS3) extends Client {
 
   private def uploadFileString(users: List[Option[Any]], bucket: Bucket, name: String) = {
     IO {
-      val content = users.filter(user => !user.isEmpty).map(user => user.get).mkString("\n")
+      val content = users.filter(user => user.isDefined).map(user => user.get).mkString("\n")
       s3Client.putObject(bucket.getName, name, content)
     }
   }
