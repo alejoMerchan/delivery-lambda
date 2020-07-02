@@ -4,9 +4,9 @@ import cats.effect.IO
 import com.amazonaws.services.s3.model.{Bucket, CreateBucketRequest, PutObjectResult}
 import com.amazonaws.services.s3.{AmazonS3, AmazonS3Client}
 
-case class S3Object(objects: List[Option[Any]], bucketName: String, fileName: String)
+final case class S3Object(objects: List[Option[Any]], bucketName: String, fileName: String)
 
-case class SourcingS3ClientRequest(request: S3Object)
+final case class SourcingS3ClientRequest(request: S3Object)
 
 object SourcingS3Client {
 
@@ -24,7 +24,7 @@ class SourcingS3Client(s3Client: AmazonS3) extends Client {
       for {
         bucket <- createBucket(data.request.bucketName)
         result <- uploadFileString(data.request.objects, bucket, data.request.fileName)
-      } yield (result)
+      } yield result
     }
     finalResult.sequence
   }
@@ -32,24 +32,20 @@ class SourcingS3Client(s3Client: AmazonS3) extends Client {
   private def createBucket(bucketName: String): IO[Bucket] = {
     import scala.collection.JavaConverters._
     IO {
-      if (!s3Client.doesBucketExistV2(bucketName)) {
-        s3Client.createBucket(new CreateBucketRequest(bucketName))
-      } else {
+      if (s3Client.doesBucketExistV2(bucketName)) {
         val buckets = s3Client.listBuckets().asScala
         buckets reduce { (a, b) =>
-          if (b.getName.equals(bucketName)) {
-            b
-          } else {
-            a
-          }
+          if (b.getName.equals(bucketName)) b else a
         }
+      } else {
+        s3Client.createBucket(new CreateBucketRequest(bucketName))
       }
     }
   }
 
   private def uploadFileString(users: List[Option[Any]], bucket: Bucket, name: String) = {
     IO {
-      val content = users.filter(user => user.isDefined).map(user => user.get).mkString("\n")
+      val content = users.filter(_.isDefined).map(_.get).mkString("\n")
       s3Client.putObject(bucket.getName, name, content)
     }
   }

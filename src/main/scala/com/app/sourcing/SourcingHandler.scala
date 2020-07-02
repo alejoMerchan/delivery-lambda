@@ -23,27 +23,26 @@ class SourcingHandler extends RequestHandler[Unit, Unit] {
 
   def process(): Task[Unit] = {
     for {
-      data <- getDataUsers()
-      dataRepositories <- getDataRepositories()
+      data <- getDataUsers
+      dataRepositories <- getDataRepositories
       storage <- storageData(data, dataRepositories, bucketName, usersFilename, reposFilename)
       result = {
         storage.attempt.map {
           case Left(error) =>
-            println("problem in the repositories process")
-            println(error.getMessage)
+            println(s"Problem in the repositories process. Error: ${error.getMessage}")
           case Right(_) =>
-            println("repositories process success")
+            println("Repositories process success")
         }
       }
-    } yield (result.unsafeRunSync())
+    } yield result.unsafeRunSync()
   }
 
-  def getDataUsers(): TaskListOption[GitHubFullUser] = {
-    gitHubClient.getUser(gitHubClient.getUsers().map(_.login))
+  def getDataUsers: TaskListOption[GitHubFullUser] = {
+    gitHubClient.getUser(gitHubClient.getUsers.map(_.login))
   }
 
-  def getDataRepositories(): TaskListOption[GitHubFullRepo] = {
-    gitHubClient.getFullRepositories(gitHubClient.getRepositories())
+  def getDataRepositories: TaskListOption[GitHubFullRepo] = {
+    gitHubClient.getFullRepositories(gitHubClient.getRepositories)
   }
 
   def storageData(

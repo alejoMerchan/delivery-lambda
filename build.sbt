@@ -1,24 +1,29 @@
 name := "delivery-lambda"
-
 version := "0.1"
-
 scalaVersion := "2.12.11"
 
-val monixVersion = "3.0.0-RC2"
+lazy val Versions = new {
+  val awsLambdaJavaCore = "1.2.0"
+  val monix             = "3.2.2"
+  val monixCats         = "2.3.3"
+  val sttpClient        = "2.2.0"
+  val circe             = "0.12.1"
+  val awsS3             = "1.11.787"
+  val typesafe          = "1.3.4"
+}
 
 assemblyMergeStrategy in assembly := {
   case PathList("META-INF", xs @ _*) => MergeStrategy.discard
-  case x => MergeStrategy.first
+  case x                             => MergeStrategy.first
 }
 
 libraryDependencies ++= Seq(
-  "com.amazonaws" % "aws-lambda-java-core" % "1.2.0",
-  "io.monix" %% "monix" % "3.2.2",
-  "io.monix" %% "monix-cats" % "2.3.3",
-  "com.softwaremill.sttp.client" %% "async-http-client-backend-monix" % "2.2.0",
-  "com.softwaremill.sttp.client" %% "circe" % "2.2.0",
-  "io.circe" %% "circe-generic" % "0.12.1",
-  "com.amazonaws" % "aws-java-sdk-s3" % "1.11.787",
-  "com.typesafe" % "config" % "1.3.4",
+  "com.amazonaws"                % "aws-lambda-java-core"             % Versions.awsLambdaJavaCore,
+  "io.monix"                     %% "monix"                           % Versions.monix,
+  "io.monix"                     %% "monix-cats"                      % Versions.monixCats,
+  "com.softwaremill.sttp.client" %% "async-http-client-backend-monix" % Versions.sttpClient,
+  "com.softwaremill.sttp.client" %% "circe"                           % Versions.sttpClient,
+  "io.circe"                     %% "circe-generic"                   % Versions.circe,
+  "com.amazonaws"                % "aws-java-sdk-s3"                  % Versions.awsS3,
+  "com.typesafe"                 % "config"                           % Versions.typesafe,
 )
-

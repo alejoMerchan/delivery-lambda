@@ -2,26 +2,29 @@ package com.app.sourcing.client
 
 import java.util.regex.{Matcher, Pattern}
 
+import com.app.sourcing.ConfigVars
+import com.app.sourcing.ConfigVars._
 import io.circe.generic.auto._
 import monix.eval.Task
 import sttp.client._
 import sttp.client.asynchttpclient.monix.AsyncHttpClientMonixBackend
 import sttp.client.circe._
-import com.app.sourcing.ConfigVars._
 
-case class GitHubUser(login: String)
+import scala.util.matching.Regex
 
-case class GitHubFullUser(login: String, id: Long, name: String, location: String) {
+final case class GitHubUser(login: String)
+
+final case class GitHubFullUser(login: String, id: Long, name: String, location: String) {
   override def toString: String = {
     login + "," + id + "," + name + "," + location
   }
 }
 
-case class GitHubRepo(id: Long, languages_url: String)
+final case class GitHubRepo(id: Long, languages_url: String)
 
-case class GitHubRepoOwner(login: String, id: Long)
+final case class GitHubRepoOwner(login: String, id: Long)
 
-case class GitHubFullRepo(
+final case class GitHubFullRepo(
     id: Long,
     name: String,
     owner: GitHubRepoOwner,
@@ -59,7 +62,7 @@ class GitHubClient() {
           .response(asJson[GitHubFullUser])
         response.send().flatMap { r =>
           r.body match {
-            case Left(error) =>
+            case Left(_) =>
               Task(None)
             case Right(value) =>
               Task(Some(value))
@@ -70,10 +73,11 @@ class GitHubClient() {
     }
   }
 
-  def getUsers(): List[GitHubUser] = {
-    getBatchUser(0, 100, List.empty[GitHubUser])
+  def getUsers: List[GitHubUser] = {
+    getBatchUser(ConfigVars.usersInitVal, ConfigVars.usersMaxVal, List.empty[GitHubUser])
   }
 
+  @scala.annotation.tailrec
   private def getBatchUser(init: Long, max: Long, users: List[GitHubUser]): List[GitHubUser] = {
 
     val response = basicRequest
@@ -81,13 +85,13 @@ class GitHubClient() {
       .get(uri"$usersUri?$pageUriParam=$init")
       .response(asJson[Seq[GitHubUser]])
 
-    implicit val backend = HttpURLConnectionBackend()
+    implicit val backend: SttpBackend[Identity, Nothing, NothingT] = HttpURLConnectionBackend()
     val result = response.send()
 
     if (result.isSuccess) {
 
       result.body match {
-        case Left(error) =>
+        case Left(_) =>
           users
         case Right(value) =>
           val nextBatch = nextSinceParam(
@@ -103,10 +107,11 @@ class GitHubClient() {
     }
   }
 
-  def getRepositories(): List[GitHubFullRepo] = {
-    getBatchRepository(0, 100, List.empty[GitHubFullRepo])
+  def getRepositories: List[GitHubFullRepo] = {
+    getBatchRepository(ConfigVars.reposInitVal, ConfigVars.reposMaxVal, List.empty[GitHubFullRepo])
   }
 
+  @scala.annotation.tailrec
   private def getBatchRepository(
       init: Long,
       max: Long,
@@ -117,13 +122,13 @@ class GitHubClient() {
       .get(uri"$reposUri?$pageUriParam=$init")
       .response(asJson[Seq[GitHubFullRepo]])
 
-    implicit val backend = HttpURLConnectionBackend()
+    implicit val backend: SttpBackend[Identity, Nothing, NothingT] = HttpURLConnectionBackend()
     val result = response.send()
 
     if (result.isSuccess) {
 
       result.body match {
-        case Left(error) =>
+        case Left(_) =>
           repos
         case Right(value) =>
           val nextBatch = nextSinceParam(
@@ -151,10 +156,10 @@ class GitHubClient() {
 
         response.send().flatMap { r =>
           r.body match {
-            case Left(error) =>
+            case Left(_) =>
               Task(None)
             case Right(value) =>
-              if (!value.isEmpty) {
+              if (value.nonEmpty) {
                 val languages = extractLanguages(value)
                 Task(Some(repo.copy(languages = Some(languages))))
               } else {
@@ -170,30 +175,38 @@ class GitHubClient() {
   }
 
   private def searchLanguage(matcher: Matcher, languages: List[String]): List[String] = {
-    if (matcher.find()) {
+    if (matcher.find)
       searchLanguage(matcher, matcher.group(1) :: languages)
-    } else {
+    else
       languages
-    }
   }
 
   private def extractLanguages(languages: String): List[String] = {
     val p = Pattern.compile("\"([^\"]*)\"");
     val m = p.matcher(languages);
     searchLanguage(m, List.empty[String])
-
   }
 
   /** Get uri for next default page.
     * Link header should be like:
     * <https://api.github.com/repositories?since=876>; rel="next", <https://api.github.com/repositories{?since}>; rel="first" */
   private def nextSinceParam(linkHeader: String) = {
-    if (!linkHeader.contains(relNextString)) None
-    val pattern = """^<https://.+since=(\d+)>$""".r
-    linkHeader.split(",").toList.head.split(";").toList.head match {
-      case pattern(x) => x.toLong
-      case _          => 0L
-    }
+    if (linkHeader.contains(relNextString)) {
+      val pattern: Regex = """^<https://.+since=(\d+)>$""".r
+      linkHeader
+        .split(",")
+        .toList
+        .headOption
+        .getOrElse(0L)
+        .toString
+        .split(";")
+        .toList
+        .headOption
+        .getOrElse(0)
+        .toString match {
+        case pattern(x) => x.toLong
+        case _          => 0L
+      }
+    } else 0L
   }
-
 }
