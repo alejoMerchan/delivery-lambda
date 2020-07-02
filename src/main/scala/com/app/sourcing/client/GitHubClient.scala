@@ -2,7 +2,6 @@ package com.app.sourcing.client
 
 import java.util.regex.{Matcher, Pattern}
 
-import com.typesafe.config.{Config, ConfigFactory}
 import io.circe.generic.auto._
 import monix.eval.Task
 import sttp.client._
@@ -27,7 +26,8 @@ case class GitHubFullRepo(id: Long, name: String, owner: GitHubRepoOwner, langua
   }
 
   private def getLanguages(list: Option[List[String]]): String = {
-    list.filter(x => x.nonEmpty).foldLeft("")((a ,b) => s"$a,$b")
+    val li: List[String] = list.getOrElse(List.empty).filter(_.nonEmpty)
+    li.tail.foldLeft(li.head)((a ,b) => s"$a-$b")
   }
 }
 
@@ -42,16 +42,8 @@ object GitHubClient {
 
 class GitHubClient() {
 
+  import com.app.sourcing.ConfigVars._
   implicit val asyncBackend = AsyncHttpClientMonixBackend()
-  val config: Config = ConfigFactory.load()
-  val authHeader: String = config.getString("auth-header")
-  val usersUri: String = config.getString("users-uri")
-  val reposUri: String = config.getString("repos-uri")
-  val linkHeader: String = config.getString("link-header")
-  val pageUriParam: String = config.getString("page-uri-param")
-  val relNextString: String = config.getString("rel-next-string")
-  val tokenType: String = config.getString("token-type")
-  val token: String = config.getString("token")
 
   def getUser(users: List[String]): Task[List[Option[GitHubFullUser]]] = {
 
@@ -109,7 +101,6 @@ class GitHubClient() {
     else {
       users
     }
-
   }
 
 
