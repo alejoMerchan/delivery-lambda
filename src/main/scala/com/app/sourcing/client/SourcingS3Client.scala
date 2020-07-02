@@ -1,10 +1,8 @@
 package com.app.sourcing.client
 
-
 import cats.effect.IO
 import com.amazonaws.services.s3.model.{Bucket, CreateBucketRequest, PutObjectResult}
 import com.amazonaws.services.s3.{AmazonS3, AmazonS3Client}
-
 
 case class S3Object(objects: List[Option[Any]], bucketName: String, fileName: String)
 
@@ -20,15 +18,13 @@ object SourcingS3Client {
 
 class SourcingS3Client(s3Client: AmazonS3) extends Client {
 
-
   def saveFileCSV(dataToSave: List[SourcingS3ClientRequest]): IO[List[PutObjectResult]] = {
     import cats.implicits._
-    val finalResult = dataToSave.map {
-      data =>
-        for {
-          bucket <- createBucket(data.request.bucketName)
-          result <- uploadFileString(data.request.objects, bucket, data.request.fileName)
-        } yield (result)
+    val finalResult = dataToSave.map { data =>
+      for {
+        bucket <- createBucket(data.request.bucketName)
+        result <- uploadFileString(data.request.objects, bucket, data.request.fileName)
+      } yield (result)
     }
     finalResult.sequence
   }
@@ -40,13 +36,12 @@ class SourcingS3Client(s3Client: AmazonS3) extends Client {
         s3Client.createBucket(new CreateBucketRequest(bucketName))
       } else {
         val buckets = s3Client.listBuckets().asScala
-        buckets reduce {
-          (a, b) =>
-            if (b.getName.equals(bucketName)) {
-              b
-            } else {
-              a
-            }
+        buckets reduce { (a, b) =>
+          if (b.getName.equals(bucketName)) {
+            b
+          } else {
+            a
+          }
         }
       }
     }
@@ -58,6 +53,5 @@ class SourcingS3Client(s3Client: AmazonS3) extends Client {
       s3Client.putObject(bucket.getName, name, content)
     }
   }
-
 
 }
