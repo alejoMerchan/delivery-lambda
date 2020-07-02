@@ -1,19 +1,11 @@
 package com.app.sourcing
 
-import cats.effect.IO
 import com.amazonaws.services.lambda.runtime.{Context, RequestHandler}
 import com.amazonaws.services.s3.model.PutObjectResult
-import com.app.sourcing.client.{
-  GitHubClient,
-  GitHubFullRepo,
-  GitHubFullUser,
-  S3Object,
-  SourcingS3Client,
-  SourcingS3ClientRequest
-}
+import com.app.sourcing.ConfigVars.{bucketName, reposFilename, usersFilename}
+import com.app.sourcing.client._
 import monix.eval.Task
 import monix.execution.Scheduler.Implicits.global
-import ConfigVars.{bucketName, reposFilename, usersFilename}
 
 import scala.concurrent.duration._
 
@@ -46,11 +38,11 @@ class SourcingHandler extends RequestHandler[Unit, Unit] {
     } yield (result.unsafeRunSync())
   }
 
-  def getDataUsers(): Task[List[Option[GitHubFullUser]]] = {
-    gitHubClient.getUser(gitHubClient.getUsers().map(user => user.login))
+  def getDataUsers(): TaskListOption[GitHubFullUser] = {
+    gitHubClient.getUser(gitHubClient.getUsers().map(_.login))
   }
 
-  def getDataRepositories(): Task[List[Option[GitHubFullRepo]]] = {
+  def getDataRepositories(): TaskListOption[GitHubFullRepo] = {
     gitHubClient.getFullRepositories(gitHubClient.getRepositories())
   }
 
@@ -59,7 +51,7 @@ class SourcingHandler extends RequestHandler[Unit, Unit] {
       data2: List[Option[Any]],
       bucketName: String,
       usersFilename: String,
-      reposFilename: String): Task[IO[List[PutObjectResult]]] = {
+      reposFilename: String): TaskIOList[PutObjectResult] = {
     Task {
       val r1 = SourcingS3ClientRequest(S3Object(data, bucketName, usersFilename))
       val r2 = SourcingS3ClientRequest(S3Object(data2, bucketName, reposFilename))

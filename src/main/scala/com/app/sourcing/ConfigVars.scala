@@ -2,7 +2,7 @@ package com.app.sourcing
 
 import com.typesafe.config.{Config, ConfigFactory}
 
-trait ConfigVars {
+sealed trait ConfigVars {
   val config: Config = ConfigFactory.load()
   def clientException: String
   def authHeader: String
@@ -19,16 +19,16 @@ trait ConfigVars {
 }
 
 object ConfigVars extends ConfigVars {
-  override def clientException: String = config.getString("client-exception")
-  override def authHeader: String = config.getString("auth-header")
-  override def usersUri: String = config.getString("users-uri")
-  override def reposUri: String = config.getString("repos-uri")
-  override def linkHeader: String = config.getString("link-header")
-  override def pageUriParam: String = config.getString("page-uri-param")
-  override def relNextString: String = config.getString("rel-next-string")
-  override def tokenType: String = config.getString("token-type")
-  override def token: String = config.getString("token")
-  override def bucketName: String = config.getString("bucket-name")
-  override def reposFilename: String = config.getString("repos-filename")
-  override def usersFilename: String = config.getString("users-filename")
+  def clientException: String = config.getString("client-exception")
+  def authHeader: String = config.getString("auth-header")
+  def usersUri: String = config.getString("users-uri")
+  def reposUri: String = config.getString("repos-uri")
+  def linkHeader: String = config.getString("link-header")
+  def pageUriParam: String = config.getString("page-uri-param")
+  def relNextString: String = config.getString("rel-next-string")
+  def tokenType: String = config.getString("token-type")
+  def token: String = config.getString("token")
+  def bucketName: String = config.getString("bucket-name")
+  def reposFilename: String = config.getString("repos-filename")
+  def usersFilename: String = config.getString("users-filename")
 }
