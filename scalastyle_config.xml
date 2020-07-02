@@ -1,0 +1,244 @@
+<scalastyle commentFilter="enabled">
+    <name>Scalastyle standard configuration</name>
+    //Check the number of lines in a file
+    <check level="warning" class="org.scalastyle.file.FileLengthChecker" enabled="false"/>
+    //Check the number of characters in a line
+    //Setting to 120 as that's about the length of the github code window
+    <check level="warning" class="org.scalastyle.file.FileLineLengthChecker" enabled="true">
+        <parameters>
+            <parameter name="maxLineLength">120</parameter>
+            <parameter name="tabSize">2</parameter>
+        </parameters>
+    </check>
+    //Check that there are no tabs in a file
+    //Off as I'm not seeing a strong consensus on removing tabs
+    <check level="warning" class="org.scalastyle.file.FileTabChecker" enabled="false"/>
+    //Check the first lines of each file matches the text
+    <check level="warning" class="org.scalastyle.file.HeaderMatchesChecker" enabled="false"/>
+    //Checks that lines are indented by a multiple of the tab size
+    //normal indent is 2 spaces, spaces for class and method params is 4 as per official scala style guide
+    <check level="warning" class="org.scalastyle.file.IndentationChecker" enabled="true">
+        <parameters>
+            <parameter name="tabSize">2</parameter>
+            <parameter name="methodParamIndentSize">4</parameter>
+            <parameter name="classParamIndentSize">4</parameter>
+        </parameters>
+    </check>
+    //Checks that a file ends with a newline character
+    <check level="warning" class="org.scalastyle.file.NewLineAtEofChecker" enabled="true"/>
+    //Checks that a regular expression cannot be matched, if found reports this
+    //can add more if needed, this just checks for println right now
+    <check level="warning" class="org.scalastyle.file.RegexChecker" enabled="true">
+        <parameters>
+            <parameter name="regex"><![CDATA[println]]></parameter>
+        </parameters>
+    </check>
+    //Check that there is no trailing whitespace at the end of lines
+    <check level="warning" class="org.scalastyle.file.WhitespaceEndOfLineChecker" enabled="true"/>
+    //Checks that block imports are not used.
+    <check level="warning" class="org.scalastyle.file.BlockImportChecker" enabled="false"/>
+    //Check that class names match a regular expression
+    <check level="warning" class="org.scalastyle.scalariform.ClassNamesChecker" enabled="true">
+        <parameters>
+            <parameter name="regex"><![CDATA[[A-Z][A-Za-z]*]]></parameter>
+        </parameters>
+    </check>
+    //Checks that type parameter to a class matches a regular expression
+    <check level="warning" class="org.scalastyle.scalariform.ClassTypeParameterChecker" enabled="false">
+        <parameters>
+            <parameter name="regex"><![CDATA[^[A-Z_]$]]></parameter>
+        </parameters>
+    </check>
+    //Check that classes and objects do not define equals without overriding equals(java.lang.Object).
+    <check level="warning" class="org.scalastyle.scalariform.CovariantEqualsChecker" enabled="true"/>
+    //Checks that the cyclomatic complexity of a method does exceed a value
+    //Basically analyzes the complexity of a method based on number of logical switches. Not entirely sure what this will do, might be worth using?
+    <check level="warning" class="org.scalastyle.scalariform.CyclomaticComplexityChecker" enabled="false">
+        <parameters>
+            <parameter name="maximum"><![CDATA[10]]></parameter>
+        </parameters>
+    </check>
+    //Checks that Java @Deprecated is not used, Scala @deprecated should be used instead
+    <check level="warning" class="org.scalastyle.scalariform.DeprecatedJavaChecker" enabled="true"/>
+    //Disallow space after certain token(s)
+    //not enabling but could be useful
+    <check level="warning" class="org.scalastyle.scalariform.DisallowSpaceAfterTokenChecker" enabled="false">
+        <parameters>
+            <parameter name="tokens">LPAREN</parameter>
+        </parameters>
+    </check>
+    //Disallow space before certain token(s)
+    <check level="warning" class="org.scalastyle.scalariform.DisallowSpaceBeforeTokenChecker" enabled="false">
+        <parameters>
+            <parameter name="tokens">COLON, COMMA, RPAREN</parameter>
+        </parameters>
+    </check>
+    //If a class/trait has no members, the braces are unnecessary
+    <check level="warning" class="org.scalastyle.scalariform.EmptyClassChecker" enabled="true"/>
+    //The interpolation for this string literal is not necessary; no 's""'
+    <check level="warning" class="org.scalastyle.scalariform.EmptyInterpolatedStringChecker" enabled="true"/>
+    //Ensure single space after certain token(s)
+    <check level="warning" class="org.scalastyle.scalariform.EnsureSingleSpaceAfterTokenChecker" enabled="false">
+        <parameters>
+            <parameter name="tokens">COLON, IF</parameter>
+        </parameters>
+    </check>
+    //Ensure single space before certain token(s)
+    <check level="warning" class="org.scalastyle.scalariform.EnsureSingleSpaceBeforeTokenChecker" enabled="false">
+        <parameters>
+            <parameter name="tokens">LPAREN</parameter>
+        </parameters>
+    </check>
+    //Check that if a class implements either equals or hashCode, it should implement the other
+    <check level="warning" class="org.scalastyle.scalariform.EqualsHashCodeChecker" enabled="true"/>
+    //Check that field names match a regular expression
+    <check level="warning" class="org.scalastyle.scalariform.FieldNamesChecker" enabled="true" >
+        <parameters>
+            <parameter name="regex">^[a-z][A-Za-z0-9]*$</parameter>
+            <parameter name="objectFieldRegex">^[A-Z][A-Za-z0-9]*$</parameter>
+        </parameters>
+    </check>
+    //Checks that braces are used in for comprehensions
+    <check level="warning" class="org.scalastyle.scalariform.ForBraceChecker" enabled="true"/>
+    //Checks that if statements have braces
+    <check level="warning" class="org.scalastyle.scalariform.IfBraceChecker" enabled="false">
+        <parameters>
+            <parameter name="singleLineAllowed"><![CDATA[true]]></parameter>
+            <parameter name="doubleLineAllowed"><![CDATA[false]]></parameter>
+        </parameters>
+    </check>
+    //Checks that imports are grouped together, not throughout the file
+    <check level="warning" class="org.scalastyle.scalariform.ImportGroupingChecker" enabled="true"/>
+    //Checks that a case statement pattern match is not lower case, as this can cause confusion
+    //Basically forces all case matching to start with a class constructor, `, or a lower case variable with a type declaration
+    <check level="warning" class="org.scalastyle.scalariform.LowercasePatternMatchChecker" enabled="false"/>
+    //Checks for use of magic numbers
+    <check level="warning" class="org.scalastyle.scalariform.MagicNumberChecker" enabled="true">
+        <parameters>
+            <parameter name="ignore"><![CDATA[-1,0,1,2,3]]></parameter>
+        </parameters>
+    </check>
+    //Check that method argument names match a regular expression
+    <check level="warning" class="org.scalastyle.scalariform.MethodArgumentNamesChecker" enabled="true">
+        <parameters>
+            <parameter name="regex">^[a-z][A-Za-z0-9]*$</parameter>
+            <parameter name="ignoreRegex">^$</parameter>
+        </parameters>
+    </check>
+    //Checks that methods do not exceed a maximum length
+    <check level="warning" class="org.scalastyle.scalariform.MethodLengthChecker" enabled="false">
+        <parameters>
+            <parameter name="maxLength"><![CDATA[50]]></parameter>
+        </parameters>
+    </check>
+    //Check that method names match a regular expression
+    <check level="warning" class="org.scalastyle.scalariform.MethodNamesChecker" enabled="true">
+        <parameters>
+            <parameter name="regex"><![CDATA[^[a-z][A-Za-z0-9]*$]]></parameter>
+        </parameters>
+    </check>
+    //Checks that argument literals are named
+    //basically so it's always updateEntity(id = 1, enabled = true) instead of updateEntity(1, true)
+    <check level="warning" class="org.scalastyle.scalariform.NamedArgumentChecker" enabled="false">
+        <parameters>
+            <parameter name="checkString">false</parameter>
+            <parameter name="ignoreMethod">^set.+$</parameter>
+        </parameters>
+    </check>
+    //Check that classes and objects do not define the clone() method
+    <check level="warning" class="org.scalastyle.scalariform.NoCloneChecker" enabled="true"/>
+    //Check that classes and objects do not define the finalize() method, as it may never be called
+    <check level="warning" class="org.scalastyle.scalariform.NoFinalizeChecker" enabled="true"/>
+    //No whitespace after left bracket ‘[’
+    <check level="warning" class="org.scalastyle.scalariform.NoWhitespaceAfterLeftBracketChecker" enabled="true"/>
+    //No whitespace before left bracket ‘[’
+    <check level="warning" class="org.scalastyle.scalariform.NoWhitespaceBeforeLeftBracketChecker" enabled="true"/>
+    //No whitespace before right bracket ‘’]’’
+    <check level="warning" class="org.scalastyle.scalariform.NoWhitespaceBeforeRightBracketChecker" enabled="true"/>
+    //Some editors are unfriendly to non ascii characters.
+    <check level="warning" class="org.scalastyle.scalariform.NonASCIICharacterChecker" enabled="true"/>
+    //Checks that the code does not have ??? operators.
+    <check level="warning" class="org.scalastyle.scalariform.NotImplementedErrorUsage" enabled="true"/>
+    //Check that null is not used
+    <check level="warning" class="org.scalastyle.scalariform.NullChecker" enabled="true">
+        <parameters>
+            <parameter name="allowNullChecks">true</parameter>
+        </parameters>
+    </check>
+    //Check that a class / trait / object does not have too many methods
+    //not enabled, don't think there should be a cap on number of methods anyways, just encourages larger methods
+    <check level="warning" class="org.scalastyle.scalariform.NumberOfMethodsInTypeChecker" enabled="false">
+        <parameters>
+            <parameter name="maxMethods"><![CDATA[30]]></parameter>
+        </parameters>
+    </check>
+    //Checks that there are not too many types declared in a file
+    <check level="warning" class="org.scalastyle.scalariform.NumberOfTypesChecker" enabled="false">
+        <parameters>
+            <parameter name="maxTypes"><![CDATA[30]]></parameter>
+        </parameters>
+    </check>
+    //Check that object names match a regular expression
+    <check level="warning" class="org.scalastyle.scalariform.ObjectNamesChecker" enabled="false">
+        <parameters>
+            <parameter name="regex"><![CDATA[[A-Z][A-Za-z]*]]></parameter>
+        </parameters>
+    </check>
+    //Checks that Java @Override is not used
+    <check level="warning" class="org.scalastyle.scalariform.OverrideJavaChecker" enabled="true"/>
+    //Check that package names match a regular expression
+    <check level="warning" class="org.scalastyle.scalariform.PackageObjectNamesChecker" enabled="true">
+        <parameters>
+            <parameter name="regex"><![CDATA[^[a-z][A-Za-z]*$]]></parameter>
+        </parameters>
+    </check>
+    //Check that package object names match a regular expression
+    <check level="warning" class="org.scalastyle.scalariform.PackageObjectNamesChecker" enabled="false">
+        <parameters>
+            <parameter name="regex"><![CDATA[^[a-z][A-Za-z]*$]]></parameter>
+        </parameters>
+    </check>
+    //Maximum number of parameters for a method
+    //I kind of like this one, but our use of slick doesn't seem to conform to this style
+    <check level="warning" class="org.scalastyle.scalariform.ParameterNumberChecker" enabled="true">
+        <parameters>
+            <parameter name="maxParameters"><![CDATA[8]]></parameter>
+        </parameters>
+    </check>
+    //Check that pattern match arrows align
+    <check level="warning" class="org.scalastyle.scalariform.PatternMatchAlignChecker" enabled="false"/>
+    //Use a : Unit = for procedure declarations
+    //basically doesn't allow "def foo() {}". Must either include type or "= {}"
+    <check level="warning" class="org.scalastyle.scalariform.ProcedureDeclarationChecker" enabled="true"/>
+    //Check that a method has an explicit return type, it is not inferred
+    <check level="warning" class="org.scalastyle.scalariform.PublicMethodsHaveTypeChecker" enabled="true">
+        <parameters>
+            <parameter name="ignoreOverride">false</parameter>
+        </parameters>
+    </check>
+    //Checks that if expressions are not redundant, i.e. easily replaced by a variant of the condition
+    <check level="warning" class="org.scalastyle.scalariform.RedundantIfChecker" enabled="true"/>
+    //Check that return is not used
+    <check level="warning" class="org.scalastyle.scalariform.ReturnChecker" enabled="true"/>
+    //Boolean expression can be simplified
+    <check level="warning" class="org.scalastyle.scalariform.SimplifyBooleanExpressionChecker" enabled="true"/>
+    //Checks a space after the start of the comment.
+    <check level="warning" class="org.scalastyle.scalariform.SpaceAfterCommentStartChecker" enabled="false"/>
+    //Check that the plus sign is followed by a space
+    <check level="warning" class="org.scalastyle.scalariform.SpacesAfterPlusChecker" enabled="true"/>
+    //Check that the plus sign is preceded by a space
+    <check level="warning" class="org.scalastyle.scalariform.SpacesBeforePlusChecker" enabled="true"/>
+    //Check that structural types are not used.
+    <check level="warning" class="org.scalastyle.scalariform.StructuralTypeChecker" enabled="false"/>
+    //Avoid wildcard imports
+    <check level="warning" class="org.scalastyle.scalariform.UnderscoreImportChecker" enabled="false"/>
+    //Checks that if a long literal is used, then an uppercase L is used
+    <check level="warning" class="org.scalastyle.scalariform.UppercaseLChecker" enabled="true"/>
+    //Checks that classes and objects do not define mutable fields
+    //We do have some legitimate var usages, mostly in tests
+    <check level="warning" class="org.scalastyle.scalariform.VarFieldChecker" enabled="true"/>
+    //Checks that functions do not define mutable variables
+    <check level="warning" class="org.scalastyle.scalariform.VarLocalChecker" enabled="false"/>
+    //Checks that while is not used
+    <check level="warning" class="org.scalastyle.scalariform.WhileChecker" enabled="true"/>
+</scalastyle>

@@ -1,9 +1,9 @@
 package com.app.sourcing
 
-import cats.effect.IO
 import com.amazonaws.services.lambda.runtime.{Context, RequestHandler}
 import com.amazonaws.services.s3.model.PutObjectResult
-import com.app.sourcing.client.{GitHubClient, S3Object, SourcingS3Client, SourcingS3ClientRequest}
+import com.app.sourcing.ConfigVars.{bucketName, reposFilename, usersFilename}
+import com.app.sourcing.client._
 import monix.eval.Task
 import monix.execution.Scheduler.Implicits.global
 
@@ -11,9 +11,8 @@ import scala.concurrent.duration._
 
 class SourcingHandler extends RequestHandler[Unit, Unit] {
 
-  val gitHubClient = GitHubClient()
-  val s3SourcingClient = SourcingS3Client()
-
+  val gitHubClient: GitHubClient = GitHubClient()
+  val s3SourcingClient: SourcingS3Client = SourcingS3Client()
 
   def handleRequest(input: Unit, context: Context): Unit = {
     val lambdaLogger = context.getLogger
@@ -22,35 +21,39 @@ class SourcingHandler extends RequestHandler[Unit, Unit] {
     lambdaLogger.log("--- process finished ---")
   }
 
-  def process() = {
+  def process(): Task[Unit] = {
     for {
-      data <- getDataUsers()
-      dataRepositories <- getDataRepositories()
-      storage <- storageData(data,dataRepositories)
+      data <- getDataUsers
+      dataRepositories <- getDataRepositories
+      storage <- storageData(data, dataRepositories, bucketName, usersFilename, reposFilename)
       result = {
         storage.attempt.map {
           case Left(error) =>
-            println("problem in the repositories process")
-            println(error.getMessage)
+            println(s"Problem in the repositories process. Error: ${error.getMessage}")
           case Right(_) =>
-            println("repositories process success")
+            println("Repositories process success")
         }
       }
-    } yield (result.unsafeRunSync())
+    } yield result.unsafeRunSync()
   }
 
-  def getDataUsers() = {
-    gitHubClient.getUser(gitHubClient.getUsers().map(user => user.login))
+  def getDataUsers: TaskListOption[GitHubFullUser] = {
+    gitHubClient.getUser(gitHubClient.getUsers.map(_.login))
   }
 
-  def getDataRepositories() = {
-    gitHubClient.getFullRepositories(gitHubClient.getRepositories())
+  def getDataRepositories: TaskListOption[GitHubFullRepo] = {
+    gitHubClient.getFullRepositories(gitHubClient.getRepositories)
   }
 
-  def storageData(data: List[Option[Any]], data2: List[Option[Any]]): Task[IO[List[PutObjectResult]]] = {
+  def storageData(
+      data: List[Option[Any]],
+      data2: List[Option[Any]],
+      bucketName: String,
+      usersFilename: String,
+      reposFilename: String): TaskIOList[PutObjectResult] = {
     Task {
-      val r1 = SourcingS3ClientRequest(S3Object(data, "sourcing-delivery-data", "users.csv"))
-      val r2 = SourcingS3ClientRequest(S3Object(data2, "sourcing-delivery-data", "repositories.csv"))
+      val r1 = SourcingS3ClientRequest(S3Object(data, bucketName, usersFilename))
+      val r2 = SourcingS3ClientRequest(S3Object(data2, bucketName, reposFilename))
       s3SourcingClient.saveFileCSV(List(r1, r2))
     }
   }
