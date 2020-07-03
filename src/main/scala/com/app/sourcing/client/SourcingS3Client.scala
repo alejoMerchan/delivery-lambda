@@ -10,8 +10,8 @@ final case class SourcingS3ClientRequest(request: S3Object)
 
 object SourcingS3Client {
 
-  def apply(): SourcingS3Client = {
-    val s3Client: AmazonS3 = AmazonS3Client.builder().build()
+  def apply(region: String): SourcingS3Client = {
+    val s3Client: AmazonS3 = AmazonS3Client.builder().withRegion(region).build()
     new SourcingS3Client(s3Client)
   }
 }

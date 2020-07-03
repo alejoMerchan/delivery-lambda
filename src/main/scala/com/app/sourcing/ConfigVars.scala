@@ -20,6 +20,9 @@ sealed trait ConfigVars {
   def usersMaxVal: Int
   def reposInitVal: Int
   def reposMaxVal: Int
+  def usersHeaderLine: String
+  def reposHeaderLine: String
+  def regionName: String
 }
 
 object ConfigVars extends ConfigVars {
@@ -39,4 +42,7 @@ object ConfigVars extends ConfigVars {
   def usersMaxVal:     Int    = config.getInt("users.users-max-val")
   def reposInitVal:    Int    = config.getInt("repos.repos-init-val")
   def reposMaxVal:     Int    = config.getInt("repos.repos-max-val")
+  def usersHeaderLine: String = config.getString("users.users-header-line")
+  def reposHeaderLine: String = config.getString("repos.repos-header-line")
+  def regionName: String = config.getString("bucket.region-name")
 }

@@ -36,7 +36,7 @@ final case class GitHubFullRepo(
 
   private def getLanguages(list: Option[List[String]]): String = {
     val li: List[String] = list.getOrElse(List.empty).filter(_.nonEmpty)
-    li.tail.foldLeft(li.head)((a, b) => s"$a-$b")
+    li.drop(1).foldLeft(li.headOption.getOrElse(""))((a, b) => s"$a-$b")
   }
 }
 
