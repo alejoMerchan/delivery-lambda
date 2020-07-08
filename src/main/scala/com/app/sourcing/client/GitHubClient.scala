@@ -74,21 +74,21 @@ class GitHubClient() {
     println(s"------ getBachUser init: $init, max: $max")
 
     implicit val backend = HttpURLConnectionBackend()
-    val response = basicRequest
+    val request = basicRequest
       .header(authHeader, s"$tokenType $token")
       .get(uri"$usersUri?$pageUriParam=$init")
       .response(asJson[Seq[GitHubUser]])
-    val result = response.send()
+    val response = request.send()
 
-    if (result.isSuccess) {
-      result.body match {
+    if (response.isSuccess) {
+      response.body match {
         case Left(error) =>
-          println(s"getBatchUser Error - ${error.getMessage}")
+          println(s"-- getBatchUser body ERROR - ${error.getMessage}")
           users
         case Right(value) =>
           val nextBatch = nextSinceParam(
-            result.headers.filter(_.name.equals(linkHeader)).head.value.split(";")(0))
-          println(s"--- getBachUser next since: $nextBatch")
+            response.headers.filter(_.name.equals(linkHeader)).head.value.split(";")(0))
+          println(s"-- getBachUser next since: $nextBatch")
           if (nextBatch > 0 && nextBatch <= max) {
             getBatchUser(nextBatch, max, users ++ value)
           } else {
@@ -96,6 +96,7 @@ class GitHubClient() {
           }
       }
     } else {
+      println(s"-- getBachUser - response ERROR . result: $response")
       users
     }
   }
@@ -109,21 +110,23 @@ class GitHubClient() {
       init: Long,
       max: Long,
       repos: List[GitHubFullRepo]): List[GitHubFullRepo] = {
+    println(s"------ getBatchRepository init: $init, max: $max")
 
     implicit val backend = HttpURLConnectionBackend()
-    val response = basicRequest
+    val request = basicRequest
       .header(authHeader, s"$tokenType $token")
       .get(uri"$reposUri?$pageUriParam=$init")
       .response(asJson[Seq[GitHubFullRepo]])
-    val result = response.send()
+    val response = request.send()
 
-    if (result.isSuccess) {
-      result.body match {
-        case Left(_) =>
+    if (response.isSuccess) {
+      response.body match {
+        case Left(error) =>
+          println(s"-- getBatchRepository body ERROR: ${error.getMessage}")
           repos
         case Right(value) =>
           val nextBatch = nextSinceParam(
-            result.headers.filter(_.name.equals(linkHeader)).head.value.split(";")(0))
+            response.headers.filter(_.name.equals(linkHeader)).head.value.split(";")(0))
           if (nextBatch > 0 && nextBatch <= max) {
             getBatchRepository(nextBatch, max, repos ++ value)
           } else {
@@ -131,6 +134,7 @@ class GitHubClient() {
           }
       }
     } else {
+      println(s"-- getBatchRepository response ERROR: $response")
       repos
     }
   }
