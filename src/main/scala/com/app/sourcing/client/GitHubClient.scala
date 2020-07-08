@@ -5,9 +5,7 @@ import java.util.regex.{Matcher, Pattern}
 import com.app.sourcing.ConfigVars
 import com.app.sourcing.ConfigVars._
 import io.circe.generic.auto._
-import monix.eval.Task
 import sttp.client._
-import sttp.client.asynchttpclient.monix.AsyncHttpClientMonixBackend
 import sttp.client.circe._
 
 import scala.util.matching.Regex
@@ -45,57 +43,52 @@ object GitHubClient {
   def apply(): GitHubClient = {
     new GitHubClient()
   }
-
 }
 
 class GitHubClient() {
 
-  implicit val asyncBackend = AsyncHttpClientMonixBackend()
+  implicit val backend: SttpBackend[Identity, Nothing, NothingT] = HttpURLConnectionBackend()
 
-  def getUser(users: List[String]): Task[List[Option[GitHubFullUser]]] = {
-
-    asyncBackend.flatMap { implicit backend =>
-      val result = users.map { user =>
-        val response = basicRequest
-          .header(authHeader, s"$tokenType $token")
-          .get(uri"$usersUri/$user")
-          .response(asJson[GitHubFullUser])
-        response.send().flatMap { r =>
-          r.body match {
-            case Left(_) =>
-              Task(None)
-            case Right(value) =>
-              Task(Some(value))
-          }
-        }
+  def getUser(users: List[String]): List[Option[GitHubFullUser]] = {
+    users.map { user =>
+      val response = basicRequest
+        .header(authHeader, s"$tokenType $token")
+        .get(uri"$usersUri/$user")
+        .response(asJson[GitHubFullUser])
+        .send()
+      response.body match {
+        case Left(_) =>
+          None
+        case Right(value) =>
+          Some(value)
       }
-      Task.parSequence(result)
     }
   }
 
-  def getUsers: List[GitHubUser] = {
-    getBatchUser(ConfigVars.usersInitVal, ConfigVars.usersMaxVal, List.empty[GitHubUser])
+  def getUsers(initVal: Long, maxVal: Long): List[GitHubUser] = {
+    getBatchUser(initVal, maxVal, List.empty[GitHubUser])
   }
 
   @scala.annotation.tailrec
   private def getBatchUser(init: Long, max: Long, users: List[GitHubUser]): List[GitHubUser] = {
+    println(s"------ getBachUser init: $init, max: $max")
 
+    implicit val backend = HttpURLConnectionBackend()
     val response = basicRequest
       .header(authHeader, s"$tokenType $token")
       .get(uri"$usersUri?$pageUriParam=$init")
       .response(asJson[Seq[GitHubUser]])
-
-    implicit val backend: SttpBackend[Identity, Nothing, NothingT] = HttpURLConnectionBackend()
     val result = response.send()
 
     if (result.isSuccess) {
-
       result.body match {
-        case Left(_) =>
+        case Left(error) =>
+          println(s"getBatchUser Error - ${error.getMessage}")
           users
         case Right(value) =>
           val nextBatch = nextSinceParam(
             result.headers.filter(_.name.equals(linkHeader)).head.value.split(";")(0))
+          println(s"--- getBachUser next since: $nextBatch")
           if (nextBatch > 0 && nextBatch <= max) {
             getBatchUser(nextBatch, max, users ++ value)
           } else {
@@ -117,16 +110,14 @@ class GitHubClient() {
       max: Long,
       repos: List[GitHubFullRepo]): List[GitHubFullRepo] = {
 
+    implicit val backend = HttpURLConnectionBackend()
     val response = basicRequest
       .header(authHeader, s"$tokenType $token")
       .get(uri"$reposUri?$pageUriParam=$init")
       .response(asJson[Seq[GitHubFullRepo]])
-
-    implicit val backend: SttpBackend[Identity, Nothing, NothingT] = HttpURLConnectionBackend()
     val result = response.send()
 
     if (result.isSuccess) {
-
       result.body match {
         case Left(_) =>
           repos
@@ -142,39 +133,29 @@ class GitHubClient() {
     } else {
       repos
     }
-
   }
 
-  def getFullRepositories(
-      repositories: List[GitHubFullRepo]): Task[List[Option[GitHubFullRepo]]] = {
-
-    asyncBackend.flatMap { implicit backend =>
-      val result = repositories.map { repo =>
-        val response = basicRequest
-          .header(authHeader, s"$tokenType $token")
-          .get(uri"${repo.languages_url}")
-
-        response.send().flatMap { r =>
-          r.body match {
-            case Left(_) =>
-              Task(None)
-            case Right(value) =>
-              if (value.nonEmpty) {
-                val languages = extractLanguages(value)
-                Task(Some(repo.copy(languages = Some(languages))))
-              } else {
-                Task(Some(repo.copy(languages = None)))
-              }
+  def getFullRepositories(repositories: List[GitHubFullRepo]): List[Option[GitHubFullRepo]] = {
+    repositories.map { repo =>
+      val response = basicRequest
+        .header(authHeader, s"$tokenType $token")
+        .get(uri"${repo.languages_url}")
+        .send()
+      response.body match {
+        case Left(_) =>
+          None
+        case Right(value) =>
+          if (value.nonEmpty) {
+            val languages = extractLanguages(value)
+            Some(repo.copy(languages = Some(languages)))
+          } else {
+            Some(repo.copy(languages = None))
           }
-
-        }
       }
-      Task.parSequence(result)
     }
-
   }
 
-  private def searchLanguage(matcher: Matcher, languages: List[String]): List[String] = {
+  def searchLanguage(matcher: Matcher, languages: List[String]): List[String] = {
     if (matcher.find)
       searchLanguage(matcher, matcher.group(1) :: languages)
     else
@@ -189,8 +170,32 @@ class GitHubClient() {
 
   /** Get uri for next default page.
     * Link header should be like:
+    * <https://api.github.com/repositories?since=876> */
+  private def nextSinceParam(linkHeader: String): Long = {
+    println(s"--- linkHeader: $linkHeader")
+    val pattern: Regex = """^<https://.+since=(\d+)>$""".r
+    linkHeader
+      .split(",")
+      .toList
+      .headOption
+      .getOrElse(0L)
+      .toString
+      .split(";")
+      .toList
+      .headOption
+      .getOrElse(0)
+      .toString match {
+      case pattern(x) => x.toLong
+      case _          => 0L
+    }
+  }
+
+  /** nextSinceParam Rel version. linkHeader differs from verion 1
+    * Get uri for next default page.
+    * Link header should be like:
     * <https://api.github.com/repositories?since=876>; rel="next", <https://api.github.com/repositories{?since}>; rel="first" */
-  private def nextSinceParam(linkHeader: String) = {
+  private def nextSinceParam2(linkHeader: String) = {
+    println(s"--- linkHeader: $linkHeader")
     if (linkHeader.contains(relNextString)) {
       val pattern: Regex = """^<https://.+since=(\d+)>$""".r
       linkHeader

@@ -19,11 +19,13 @@ assemblyMergeStrategy in assembly := {
 
 libraryDependencies ++= Seq(
   "com.amazonaws"                % "aws-lambda-java-core"             % Versions.awsLambdaJavaCore,
-  "io.monix"                     %% "monix"                           % Versions.monix,
-  "io.monix"                     %% "monix-cats"                      % Versions.monixCats,
-  "com.softwaremill.sttp.client" %% "async-http-client-backend-monix" % Versions.sttpClient,
+//  "io.monix"                     %% "monix"                           % Versions.monix,
+//  "io.monix"                     %% "monix-cats"                      % Versions.monixCats,
+//  "com.softwaremill.sttp.client" %% "async-http-client-backend-monix" % Versions.sttpClient,
   "com.softwaremill.sttp.client" %% "circe"                           % Versions.sttpClient,
   "io.circe"                     %% "circe-generic"                   % Versions.circe,
   "com.amazonaws"                % "aws-java-sdk-s3"                  % Versions.awsS3,
   "com.typesafe"                 % "config"                           % Versions.typesafe,
+  "com.softwaremill.sttp.client" %% "core" % "2.2.0",
+  "org.typelevel" %% "cats-effect" % "2.1.3"
 )

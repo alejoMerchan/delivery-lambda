@@ -16,10 +16,10 @@ sealed trait ConfigVars {
   def bucketName: String
   def reposFilename: String
   def usersFilename: String
-  def usersInitVal: Int
-  def usersMaxVal: Int
-  def reposInitVal: Int
-  def reposMaxVal: Int
+  def usersInitVal: Long
+  def usersMaxVal: Long
+  def reposInitVal: Long
+  def reposMaxVal: Long
   def usersHeaderLine: String
   def reposHeaderLine: String
   def regionName: String
@@ -38,10 +38,10 @@ object ConfigVars extends ConfigVars {
   def bucketName:      String = config.getString("bucket.bucket-name")
   def reposFilename:   String = config.getString("repos.repos-filename")
   def usersFilename:   String = config.getString("users.users-filename")
-  def usersInitVal:    Int    = config.getInt("users.users-init-val")
-  def usersMaxVal:     Int    = config.getInt("users.users-max-val")
-  def reposInitVal:    Int    = config.getInt("repos.repos-init-val")
-  def reposMaxVal:     Int    = config.getInt("repos.repos-max-val")
+  def usersInitVal:    Long   = config.getLong("users.users-init-val")
+  def usersMaxVal:     Long   = config.getLong("users.users-max-val")
+  def reposInitVal:    Long   = config.getLong("repos.repos-init-val")
+  def reposMaxVal:     Long   = config.getLong("repos.repos-max-val")
   def usersHeaderLine: String = config.getString("users.users-header-line")
   def reposHeaderLine: String = config.getString("repos.repos-header-line")
   def regionName: String = config.getString("bucket.region-name")
