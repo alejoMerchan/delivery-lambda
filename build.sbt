@@ -18,10 +18,10 @@ assemblyMergeStrategy in assembly := {
 
 libraryDependencies ++= Seq(
   "com.amazonaws"                  % "aws-lambda-java-core"             % Versions.awsLambdaJavaCore,
-  "com.softwaremill.sttp.client"   %% "circe"                           % Versions.sttpClient,
-  "io.circe"                       %% "circe-generic"                   % Versions.circe,
   "com.amazonaws"                  % "aws-java-sdk-s3"                  % Versions.awsS3,
-  "com.typesafe"                   % "config"                           % Versions.typesafe,
+  "com.softwaremill.sttp.client"   %% "circe"                           % Versions.sttpClient,
   "com.softwaremill.sttp.client"   %% "core"                            % Versions.sttpClient,
+  "io.circe"                       %% "circe-generic"                   % Versions.circe,
+  "com.typesafe"                   % "config"                           % Versions.typesafe,
   "org.typelevel"                  %% "cats-effect"                     % Versions.catsEffect
 )

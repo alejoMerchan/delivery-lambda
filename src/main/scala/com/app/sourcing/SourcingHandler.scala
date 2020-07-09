@@ -2,8 +2,11 @@ package com.app.sourcing
 
 import com.amazonaws.services.lambda.runtime.{Context, LambdaLogger, RequestHandler}
 import com.amazonaws.services.s3.model.PutObjectResult
-import com.app.sourcing.ConfigVars._
 import com.app.sourcing.client._
+import com.app.sourcing.entity.{GitHubFullRepo, GitHubFullUser}
+import com.app.sourcing.service.conf.BucketConf._
+import com.app.sourcing.service.conf.UserConf._
+import com.app.sourcing.service.conf.ReposConf._
 
 class SourcingHandler extends RequestHandler[Unit, Unit] {
 
@@ -19,8 +22,11 @@ class SourcingHandler extends RequestHandler[Unit, Unit] {
 
   def process(lambdaLogger: LambdaLogger): Unit = {
 
-    val dataUsers: List[Option[GitHubFullUser]] = getDataUsers(usersMaxRequests)
-    val dataRepositories: List[Option[GitHubFullRepo]] = getDataRepositories(reposMaxRequests)
+    val dataUsers: List[Option[GitHubFullUser]] =
+      gitHubClient.getUser(gitHubClient.getUsers(usersMaxRequests).map(_.login))
+
+    val dataRepositories: List[Option[GitHubFullRepo]] =
+      gitHubClient.getFullRepositories(gitHubClient.getRepositories(reposMaxRequests))
 
     val s3SaveResult = storageData(
       lambdaLogger,
@@ -33,14 +39,6 @@ class SourcingHandler extends RequestHandler[Unit, Unit] {
       reposHeaderLine)
 
     lambdaLogger.log(s"--- S3 save result $s3SaveResult")
-  }
-
-  def getDataUsers(maxRequests: Int): List[Option[GitHubFullUser]] = {
-    gitHubClient.getUser(gitHubClient.getUsers(maxRequests).map(_.login))
-  }
-
-  def getDataRepositories(maxRequests: Int): List[Option[GitHubFullRepo]] = {
-    gitHubClient.getFullRepositories(gitHubClient.getRepositories(maxRequests))
   }
 
   def storageData(

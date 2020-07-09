@@ -2,41 +2,17 @@ package com.app.sourcing.client
 
 import java.util.regex.{Matcher, Pattern}
 
-import com.app.sourcing.ConfigVars._
+import com.app.sourcing.entity.{GitHubFullRepo, GitHubFullUser, GitHubUser}
+import com.app.sourcing.service.{RepoService, UserService}
+import com.app.sourcing.service.conf.AuthConf._
+import com.app.sourcing.service.conf.ReposConf._
+import com.app.sourcing.service.conf.ApiParamsConf._
+import com.app.sourcing.service.conf.UserConf._
 import io.circe.generic.auto._
 import sttp.client._
 import sttp.client.circe._
 
 import scala.util.matching.Regex
-
-final case class GitHubUser(login: String)
-
-final case class GitHubFullUser(login: String, id: Long, name: String, location: String) {
-  override def toString: String = {
-    login + "," + id + "," + name + "," + location
-  }
-}
-
-final case class GitHubRepo(id: Long, languages_url: String)
-
-final case class GitHubRepoOwner(login: String, id: Long)
-
-final case class GitHubFullRepo(
-    id: Long,
-    name: String,
-    owner: GitHubRepoOwner,
-    languages_url: String,
-    languages: Option[List[String]]) {
-
-  override def toString: String = {
-    id + "," + name + "," + owner.login + "," + owner.id + "," + getLanguages(languages)
-  }
-
-  private def getLanguages(list: Option[List[String]]): String = {
-    val li: List[String] = list.getOrElse(List.empty).filter(_.nonEmpty)
-    li.drop(1).foldLeft(li.headOption.getOrElse(""))((a, b) => s"$a-$b")
-  }
-}
 
 object GitHubClient {
 
@@ -45,7 +21,7 @@ object GitHubClient {
   }
 }
 
-class GitHubClient() {
+class GitHubClient() extends UserService with RepoService {
 
   implicit val backend = HttpURLConnectionBackend()
 
@@ -93,8 +69,7 @@ class GitHubClient() {
     }
   }
 
-  @scala.annotation.tailrec
-  private def getBatchUser(
+  def getBatchUser(
       init: Long,
       users: List[GitHubUser],
       maxRequests: Int): List[GitHubUser] = {
@@ -126,8 +101,7 @@ class GitHubClient() {
     }
   }
 
-  @scala.annotation.tailrec
-  private def getBatchRepository(
+  def getBatchRepository(
       init: Long,
       repos: List[GitHubFullRepo],
       maxRequests: Int): List[GitHubFullRepo] = {
@@ -157,7 +131,7 @@ class GitHubClient() {
     }
   }
 
-  def searchLanguage(matcher: Matcher, languages: List[String]): List[String] = {
+  private def searchLanguage(matcher: Matcher, languages: List[String]): List[String] = {
     if (matcher.find)
       searchLanguage(matcher, matcher.group(1) :: languages)
     else
@@ -190,30 +164,5 @@ class GitHubClient() {
       case pattern(x) => x.toLong
       case _          => 0L
     }
-  }
-
-  /** nextSinceParam Rel version. linkHeader differs from verion 1
-    * Get uri for next default page.
-    * Link header should be like:
-    * <https://api.github.com/repositories?since=876>; rel="next", <https://api.github.com/repositories{?since}>; rel="first" */
-  private def nextSinceParam2(linkHeader: String) = {
-    println(s"--- linkHeader: $linkHeader")
-    if (linkHeader.contains(relNextString)) {
-      val pattern: Regex = """^<https://.+since=(\d+)>$""".r
-      linkHeader
-        .split(",")
-        .toList
-        .headOption
-        .getOrElse(0L)
-        .toString
-        .split(";")
-        .toList
-        .headOption
-        .getOrElse(0)
-        .toString match {
-        case pattern(x) => x.toLong
-        case _          => 0L
-      }
-    } else 0L
   }
 }
