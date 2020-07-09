@@ -16,13 +16,11 @@ sealed trait ConfigVars {
   def bucketName: String
   def reposFilename: String
   def usersFilename: String
-  def usersInitVal: Long
-  def usersMaxVal: Long
-  def reposInitVal: Long
-  def reposMaxVal: Long
   def usersHeaderLine: String
   def reposHeaderLine: String
   def regionName: String
+  def usersMaxRequests: Int
+  def reposMaxRequests: Int
 }
 
 object ConfigVars extends ConfigVars {
@@ -38,11 +36,9 @@ object ConfigVars extends ConfigVars {
   def bucketName:      String = config.getString("bucket.bucket-name")
   def reposFilename:   String = config.getString("repos.repos-filename")
   def usersFilename:   String = config.getString("users.users-filename")
-  def usersInitVal:    Long   = config.getLong("users.users-init-val")
-  def usersMaxVal:     Long   = config.getLong("users.users-max-val")
-  def reposInitVal:    Long   = config.getLong("repos.repos-init-val")
-  def reposMaxVal:     Long   = config.getLong("repos.repos-max-val")
   def usersHeaderLine: String = config.getString("users.users-header-line")
   def reposHeaderLine: String = config.getString("repos.repos-header-line")
   def regionName: String = config.getString("bucket.region-name")
+  def usersMaxRequests: Int = config.getInt("users.max-requests")
+  def reposMaxRequests: Int = config.getInt("repos.max-requests")
 }
