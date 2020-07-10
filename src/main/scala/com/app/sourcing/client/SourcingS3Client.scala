@@ -16,7 +16,7 @@ object SourcingS3Client {
   }
 }
 
-class SourcingS3Client(s3Client: AmazonS3) extends Client {
+class SourcingS3Client(s3Client: AmazonS3) extends S3Client {
 
   def saveFileCSV(dataToSave: List[SourcingS3ClientRequest]): IO[List[PutObjectResult]] = {
     import cats.implicits._
