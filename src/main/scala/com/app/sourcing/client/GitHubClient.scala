@@ -3,14 +3,15 @@ package com.app.sourcing.client
 import java.util.regex.{Matcher, Pattern}
 
 import com.app.sourcing.entity.{GitHubFullRepo, GitHubFullUser, GitHubUser}
-import com.app.sourcing.service.{RepoService, UserService}
+import com.app.sourcing.service.conf.ApiParamsConf._
 import com.app.sourcing.service.conf.AuthConf._
 import com.app.sourcing.service.conf.ReposConf._
-import com.app.sourcing.service.conf.ApiParamsConf._
 import com.app.sourcing.service.conf.UserConf._
+import com.app.sourcing.service.{RepoService, UserService}
 import io.circe.generic.auto._
 import sttp.client._
 import sttp.client.circe._
+import sttp.model.Header
 
 import scala.util.matching.Regex
 
@@ -69,10 +70,7 @@ class GitHubClient() extends UserService with RepoService {
     }
   }
 
-  def getBatchUser(
-      init: Long,
-      users: List[GitHubUser],
-      maxRequests: Int): List[GitHubUser] = {
+  def getBatchUser(init: Long, users: List[GitHubUser], maxRequests: Int): List[GitHubUser] = {
     println(s"------ getBachUser init: $init, maxRequests: $maxRequests")
 
     implicit val backend = HttpURLConnectionBackend()
@@ -89,7 +87,11 @@ class GitHubClient() extends UserService with RepoService {
           users
         case Right(value) =>
           val nextBatch = nextSinceParam(
-            response.headers.filter(_.name.equals(linkHeader)).head.value.split(";")(0))
+            response.headers
+              .find(_.name.equals(linkHeader))
+              .getOrElse(Header("", ""))
+              .value
+              .split(";")(0))
           println(s"-- getBachUser next since: $nextBatch")
           val usersList = users ++ value
           if (maxRequests == 0 || ((maxRequests - 1) <= usersList.size)) users
@@ -120,7 +122,11 @@ class GitHubClient() extends UserService with RepoService {
           repos
         case Right(value) =>
           val nextBatch = nextSinceParam(
-            response.headers.filter(_.name.equals(linkHeader)).head.value.split(";")(0))
+            response.headers
+              .find(_.name.equals(linkHeader))
+              .getOrElse(Header("", ""))
+              .value
+              .split(";")(0))
           val reposList = repos ++ value
           if (maxRequests == 0 || ((maxRequests - 1) <= reposList.size)) repos
           else getBatchRepository(nextBatch, repos ++ value, maxRequests - 1)
