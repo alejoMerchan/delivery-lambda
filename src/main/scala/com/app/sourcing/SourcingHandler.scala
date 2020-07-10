@@ -7,6 +7,7 @@ import com.app.sourcing.entity.{GitHubFullRepo, GitHubFullUser}
 import com.app.sourcing.service.conf.BucketConf._
 import com.app.sourcing.service.conf.UserConf._
 import com.app.sourcing.service.conf.ReposConf._
+import com.app.sourcing.service.conf.{ReposConf, UserConf}
 
 class SourcingHandler extends RequestHandler[Unit, Unit] {
 
@@ -23,10 +24,10 @@ class SourcingHandler extends RequestHandler[Unit, Unit] {
   def process(lambdaLogger: LambdaLogger): Unit = {
 
     val dataUsers: List[Option[GitHubFullUser]] =
-      gitHubClient.getUser(gitHubClient.getUsers(usersMaxRequests).map(_.login))
+      gitHubClient.getUser(gitHubClient.getUsers(usersMaxRequests, UserConf.initVal).map(_.login))
 
     val dataRepositories: List[Option[GitHubFullRepo]] =
-      gitHubClient.getFullRepositories(gitHubClient.getRepositories(reposMaxRequests))
+      gitHubClient.getFullRepositories(gitHubClient.getRepositories(reposMaxRequests, ReposConf.initVal))
 
     val s3SaveResult = storageData(
       lambdaLogger,

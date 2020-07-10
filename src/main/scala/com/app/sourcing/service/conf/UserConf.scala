@@ -5,6 +5,7 @@ trait UserConf extends ConfigLoad {
   def usersFilename: String
   def usersHeaderLine: String
   def usersMaxRequests: Int
+  def initVal: Long
 }
 
 object UserConf extends UserConf {
@@ -12,4 +13,5 @@ object UserConf extends UserConf {
   def usersFilename:   String = config.getString("users.users-filename")
   def usersHeaderLine: String = config.getString("users.users-header-line")
   def usersMaxRequests: Int = config.getInt("users.max-requests")
+  def initVal: Long = config.getLong("users.init-val")
 }

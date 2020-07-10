@@ -25,12 +25,12 @@ class GitHubClient() extends UserService with RepoService {
 
   implicit val backend = HttpURLConnectionBackend()
 
-  def getUsers(maxRequests: Int): List[GitHubUser] = {
-    getBatchUser(0, List.empty[GitHubUser], maxRequests)
+  def getUsers(maxRequests: Int, initVal: Long): List[GitHubUser] = {
+    getBatchUser(initVal, List.empty[GitHubUser], maxRequests)
   }
 
-  def getRepositories(maxRequests: Int): List[GitHubFullRepo] = {
-    getBatchRepository(0, List.empty[GitHubFullRepo], maxRequests)
+  def getRepositories(maxRequests: Int, initVal: Long): List[GitHubFullRepo] = {
+    getBatchRepository(initVal, List.empty[GitHubFullRepo], maxRequests)
   }
 
   def getUser(users: List[String]): List[Option[GitHubFullUser]] = {
