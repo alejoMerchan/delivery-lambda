@@ -105,7 +105,6 @@ class GitHubClient() extends UserService with RepoService {
               .value
               .split(";")(0),
             pageUriParam)
-          println(s"-- getBachUser next since: $nextBatch")
           val usersList = users ++ value
           if (maxRequests == 0 || ((maxRequests - 1) <= usersList.size)) users
           else getBatchUser(nextBatch, usersList, maxRequests - 1)
