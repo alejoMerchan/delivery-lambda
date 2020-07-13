@@ -5,8 +5,8 @@ import com.amazonaws.services.s3.model.PutObjectResult
 import com.app.sourcing.client._
 import com.app.sourcing.entity.{GitHubFullRepo, GitHubFullUser}
 import com.app.sourcing.service.conf.BucketConf._
-import com.app.sourcing.service.conf.UserConf._
 import com.app.sourcing.service.conf.ReposConf._
+import com.app.sourcing.service.conf.UserConf._
 import com.app.sourcing.service.conf.{ReposConf, UserConf}
 
 class SourcingHandler extends RequestHandler[Unit, Unit] {
@@ -23,40 +23,43 @@ class SourcingHandler extends RequestHandler[Unit, Unit] {
 
   def process(lambdaLogger: LambdaLogger): Unit = {
 
-    val dataUsers: List[Option[GitHubFullUser]] =
-      gitHubClient.getUser(gitHubClient.getUsers(usersMaxRequests, UserConf.initVal).map(_.login))
+    /** Users using search endpoint. */
+    if (usersMaxRequests > 0) {
+      val dataUsers: List[Option[GitHubFullUser]] =
+        gitHubClient.getUser(gitHubClient.getUsers(usersMaxRequests, UserConf.initVal).map(_.login))
+      val s3UserResult =
+        storageData(lambdaLogger, dataUsers, usersHeaderLine, usersFilename)
+      lambdaLogger.log(s"--- S3 $usersFilename save result $s3UserResult")
+    }
 
-    val dataRepositories: List[Option[GitHubFullRepo]] =
-      gitHubClient.getFullRepositories(gitHubClient.getRepositories(reposMaxRequests, ReposConf.initVal))
+    /** Users using get endpoint. */
+    if (reposMaxRequests > 0) {
+      val dataRepositories: List[Option[GitHubFullRepo]] =
+        gitHubClient.getFullRepositories(
+          gitHubClient.getRepositories(reposMaxRequests, ReposConf.initVal))
+      val s3ReposResult =
+        storageData(lambdaLogger, dataRepositories, reposHeaderLine, reposFilename)
+      lambdaLogger.log(s"--- S3 $reposFilename save result $s3ReposResult")
+    }
 
-    val s3SaveResult = storageData(
-      lambdaLogger,
-      dataUsers,
-      dataRepositories,
-      bucketName,
-      usersFilename,
-      reposFilename,
-      usersHeaderLine,
-      reposHeaderLine)
-
-    lambdaLogger.log(s"--- S3 save result $s3SaveResult")
+    /** Repositories using get endpoint. */
+    if (maxSearchRequests > 0) {
+      val usersSearchData: List[Option[GitHubFullUser]] =
+        gitHubClient.getUser(
+          gitHubClient.searchUsers(maxSearchRequests, searchInitPage).map(_.login))
+      val s3SearchResult =
+        storageData(lambdaLogger, usersSearchData, usersHeaderLine, usersSearchFilename)
+      lambdaLogger.log(s"--- S3 $usersSearchFilename save result $s3SearchResult")
+    }
   }
 
   def storageData(
       lambdaLogger: LambdaLogger,
-      dataUsers: List[Option[Any]],
-      dataRepos: List[Option[Any]],
-      bucketName: String,
-      usersFilename: String,
-      reposFilename: String,
-      usersHeaderLine: String,
-      reposHeaderLine: String): List[PutObjectResult] = {
-    lambdaLogger.log(s"--- storageData - total users: ${dataUsers.size}")
-    lambdaLogger.log(s"--- storageData - total repos: ${dataRepos.size}")
-    val r1 = SourcingS3ClientRequest(
-      S3Object(Some(usersHeaderLine) :: dataUsers, bucketName, usersFilename))
-    val r2 = SourcingS3ClientRequest(
-      S3Object(Some(reposHeaderLine) :: dataRepos, bucketName, reposFilename))
-    s3SourcingClient.saveFileCSV(List(r1, r2)).unsafeRunSync()
+      data: List[Option[Any]],
+      headerLine: String,
+      fileName: String): List[PutObjectResult] = {
+    lambdaLogger.log(s"--- storageData - $fileName total data: ${data.size}")
+    val s3Req = SourcingS3ClientRequest(S3Object(Some(headerLine) :: data, bucketName, fileName))
+    s3SourcingClient.saveFileCSV(List(s3Req)).unsafeRunSync()
   }
 }

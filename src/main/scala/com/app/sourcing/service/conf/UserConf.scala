@@ -6,6 +6,10 @@ trait UserConf extends ConfigLoad {
   def usersHeaderLine: String
   def usersMaxRequests: Int
   def initVal: Long
+  def maxSearchRequests: Int
+  def searchUri: String
+  def searchInitPage: Int
+  def usersSearchFilename: String
 }
 
 object UserConf extends UserConf {
@@ -14,4 +18,8 @@ object UserConf extends UserConf {
   def usersHeaderLine: String = config.getString("users.users-header-line")
   def usersMaxRequests: Int = config.getInt("users.max-requests")
   def initVal: Long = config.getLong("users.init-val")
+  def maxSearchRequests: Int = config.getInt("users.max-search-requests")
+  def searchUri: String = config.getString("users.search-uri")
+  def searchInitPage: Int = config.getInt("users.search-init-page")
+  def usersSearchFilename: String = config.getString("users.users-search-filename")
 }
